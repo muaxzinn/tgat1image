@@ -1,0 +1,970 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>POY-SIAN TGAT 1 Minimal Quiz</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=0.5, maximum-scale=5.0, viewport-fit=cover" />
+  <style>
+    /* ============ RESET เล็ก ๆ ============ */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+      background: #f4f7fb;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      color: #1d2933;
+    }
+
+    /* ============ LAYOUT หลัก ============ */
+    .app {
+      width: 100%;
+      max-width: 980px;
+      background: #ffffff;
+      border-radius: 18px;
+      box-shadow: 0 14px 32px rgba(15, 23, 42, 0.15);
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.6fr);
+      overflow: hidden;
+    }
+
+    @media (max-width: 880px) {
+      .app {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* ============ PANEL โปสเตอร์ ============ */
+    .poster-panel {
+      background: #0f766e;
+      color: #ecfdf5;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .poster-thumb {
+      width: 100%;
+      max-width: 360px;
+      border-radius: 14px;
+      overflow: hidden;
+      cursor: zoom-in;
+      box-shadow: 0 10px 24px rgba(4, 47, 46, 0.6);
+      transition: transform 0.18s ease, box-shadow 0.18s ease;
+      background: #022c22;
+    }
+
+    .poster-thumb img {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
+    .poster-thumb:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 16px 32px rgba(4, 47, 46, 0.8);
+    }
+
+    .poster-caption-top {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      opacity: 0.9;
+    }
+
+    .poster-caption-main {
+      font-size: 0.9rem;
+      text-align: center;
+      opacity: 0.95;
+      line-height: 1.4;
+    }
+
+    .poster-tag {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(209, 250, 229, 0.8);
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    /* ============ PANEL QUIZ ============ */
+    .quiz-panel {
+      padding: 18px 18px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .quiz-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .quiz-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+    }
+
+    .quiz-subtitle {
+      font-size: 0.8rem;
+      color: #6b7280;
+      margin-top: 3px;
+    }
+
+    .pill {
+      font-size: 0.75rem;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: #ecfdf5;
+      color: #047857;
+      border: 1px solid #bbf7d0;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .progress {
+      width: 100%;
+      height: 6px;
+      border-radius: 999px;
+      background: #e5e7eb;
+      overflow: hidden;
+      margin-top: 4px;
+    }
+
+    .progress__fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #0d9488, #22c55e);
+      transition: width 0.4s ease;
+    }
+
+    .meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      font-size: 0.8rem;
+      color: #6b7280;
+      margin-top: 6px;
+    }
+
+    .meta strong {
+      color: #0f766e;
+    }
+
+    .question-card {
+      margin-top: 8px;
+      background: #f9fafb;
+      border-radius: 14px;
+      padding: 12px 12px 10px;
+      border: 1px solid #e5e7eb;
+    }
+
+    .question-text {
+      font-size: 0.95rem;
+      line-height: 1.5;
+      margin-bottom: 8px;
+      animation: fadeInUp 0.25s ease;
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(6px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .choices {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .choice {
+      position: relative;
+      border-radius: 999px;
+      border: 1px solid #e5e7eb;
+      background: #ffffff;
+      padding: 7px 12px 7px 36px;
+      font-size: 0.9rem;
+      text-align: left;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: background 0.15s ease, border-color 0.15s ease,
+        transform 0.1s ease;
+    }
+
+    .choice-label {
+      position: absolute;
+      left: 10px;
+      width: 18px;
+      height: 18px;
+      border-radius: 999px;
+      border: 1px solid #d1d5db;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.7rem;
+      color: #4b5563;
+      background: #f9fafb;
+    }
+
+    .choice:hover {
+      background: #f3f4f6;
+      transform: translateY(-1px);
+    }
+
+    .choice.correct {
+      background: #ecfdf5;
+      border-color: #22c55e;
+      color: #047857;
+      animation: pulseCorrect 0.35s ease;
+    }
+
+    .choice.wrong {
+      background: #fef2f2;
+      border-color: #ef4444;
+      color: #b91c1c;
+      animation: shakeWrong 0.25s ease;
+    }
+
+    .choice.disabled {
+      pointer-events: none;
+      opacity: 0.95;
+    }
+
+    @keyframes pulseCorrect {
+      0% {
+        transform: scale(1);
+      }
+      50% {
+        transform: scale(1.02);
+      }
+      100% {
+        transform: scale(1);
+      }
+    }
+
+    @keyframes shakeWrong {
+      0% {
+        transform: translateX(0);
+      }
+      25% {
+        transform: translateX(-3px);
+      }
+      50% {
+        transform: translateX(3px);
+      }
+      75% {
+        transform: translateX(-2px);
+      }
+      100% {
+        transform: translateX(0);
+      }
+    }
+
+    .explain {
+      margin-top: 8px;
+      font-size: 0.8rem;
+      line-height: 1.5;
+      background: #ffffff;
+      border-radius: 10px;
+      padding: 8px 10px;
+      border-left: 3px solid #0f766e;
+      color: #374151;
+      max-height: 0;
+      opacity: 0;
+      overflow: hidden;
+      transition: max-height 0.35s ease, opacity 0.35s ease;
+    }
+
+    .explain.visible {
+      max-height: 260px;
+      opacity: 1;
+    }
+
+    .bottom-bar {
+      margin-top: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.78rem;
+      color: #6b7280;
+      gap: 6px;
+    }
+
+    .btn {
+      border-radius: 999px;
+      border: 1px solid transparent;
+      padding: 7px 14px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      cursor: pointer;
+      background: transparent;
+      transition: background 0.15s ease, border-color 0.15s ease,
+        color 0.15s ease, transform 0.1s ease;
+    }
+
+    .btn-primary {
+      background: #0f766e;
+      color: #ecfdf5;
+      border-color: #0f766e;
+    }
+
+    .btn-primary:disabled {
+      background: #e5e7eb;
+      border-color: #e5e7eb;
+      color: #9ca3af;
+      cursor: default;
+    }
+
+    .btn-primary:not(:disabled):hover {
+      background: #115e59;
+      border-color: #115e59;
+      transform: translateY(-1px);
+    }
+
+    .btn-ghost {
+      border-color: #d1d5db;
+      color: #374151;
+    }
+
+    .btn-ghost:hover {
+      background: #f3f4f6;
+    }
+
+    /* ============ RESULT OVERLAY ============ */
+    .result-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.75);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+      z-index: 30;
+    }
+
+    .result-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .result-card {
+      background: #ffffff;
+      border-radius: 16px;
+      padding: 18px 16px 16px;
+      width: min(92vw, 360px);
+      text-align: center;
+      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.4);
+    }
+
+    .result-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .result-score {
+      font-size: 0.9rem;
+      margin-bottom: 8px;
+      color: #4b5563;
+    }
+
+    .result-tag {
+      display: inline-flex;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: #ecfdf5;
+      color: #047857;
+      border: 1px solid #bbf7d0;
+      font-size: 0.75rem;
+      margin-bottom: 6px;
+      font-weight: 600;
+    }
+
+    .result-text {
+      font-size: 0.82rem;
+      color: #6b7280;
+      line-height: 1.5;
+      margin-bottom: 10px;
+    }
+
+    /* ============ ZOOM OVERLAY ============ */
+    .zoom-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.85);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+      z-index: 40;
+    }
+
+    .zoom-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .zoom-box {
+      width: min(90vw, 780px);
+      max-height: 90vh;
+      background: #020617;
+      border-radius: 14px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .zoom-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      justify-content: space-between;
+      padding: 8px 12px;
+      background: #020617;
+      color: #e5e7eb;
+      font-size: 0.8rem;
+    }
+
+    .zoom-range-wrap {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex: 1;
+      justify-content: flex-end;
+    }
+
+    .zoom-range-wrap input[type="range"] {
+      flex: 1;
+    }
+
+    .zoom-body {
+      flex: 1;
+      padding: 10px;
+      overflow: auto;
+      /* Allow pointer events handling inside the zoom area (pinch/pan)
+         and prevent browser default gestures from interfering. */
+      touch-action: none;
+    }
+
+    .zoom-img {
+      display: block;
+      max-width: 100%;
+      transform-origin: center center;
+      transition: transform 0.12s ease;
+      will-change: transform;
+      touch-action: none;
+    }
+
+    .zoom-close {
+      border-radius: 999px;
+      border: 1px solid #4b5563;
+      width: 26px;
+      height: 26px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      background: transparent;
+      color: #e5e7eb;
+      font-size: 1rem;
+      padding: 0;
+    }
+
+    .zoom-close:hover {
+      background: #111827;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <!-- PANEL โปสเตอร์ -->
+    <section class="poster-panel">
+      <div class="poster-caption-top">Reading Source</div>
+      <div class="poster-thumb" id="posterThumb">
+        <!-- เปลี่ยน src เป็นไฟล์โปสเตอร์ของมัง -->
+        <img src="/poster.png" alt="POISE XIAN Herbal Inhaler Poster" />
+      </div>
+      <div class="poster-caption-main">
+        <div class="poster-tag">POY-SIAN • HERBAL INHALER</div>
+        <div style="margin-top:6px;">
+          ใช้โปสเตอร์จริง เป็น passage สำหรับออกข้อสอบ TGAT 1<br />
+          เน้น Main idea • Detail • Vocab • Inference
+        </div>
+      </div>
+    </section>
+
+    <!-- PANEL QUIZ -->
+    <section class="quiz-panel">
+      <header class="quiz-header">
+        <div>
+          <div class="quiz-title">TGAT 1 – POY-SIAN Poster Quiz</div>
+          <div class="quiz-subtitle">
+            5 ข้อสไตล์ข้อสอบจริง ฝึกอ่านโปสเตอร์อังกฤษแบบเนียน ๆ
+          </div>
+        </div>
+        <div class="pill">5 Questions</div>
+      </header>
+
+      <div class="progress">
+        <div class="progress__fill" id="progressFill"></div>
+      </div>
+
+      <div class="meta">
+        <div>Question <strong id="qNumber">1</strong> / 5</div>
+        <div>Score: <strong id="scoreLabel">0</strong></div>
+      </div>
+
+      <article class="question-card">
+        <div class="question-text" id="questionText"></div>
+        <div class="choices" id="choicesContainer"></div>
+        <div class="explain" id="explainBox"></div>
+      </article>
+
+      <div class="bottom-bar">
+        <button class="btn btn-ghost" id="resetBtn">Reset</button>
+        <button class="btn btn-primary" id="nextBtn" disabled>
+          Next
+        </button>
+      </div>
+    </section>
+  </div>
+
+  <!-- RESULT OVERLAY -->
+  <div class="result-overlay" id="resultOverlay">
+    <div class="result-card">
+      <div class="result-tag" id="resultTag">Herbal Rookie</div>
+      <div class="result-title" id="resultTitle">Nice Try!</div>
+      <div class="result-score" id="resultScore">You scored 0 / 5</div>
+      <div class="result-text" id="resultText">
+        ลองอ่านคำในโปสเตอร์ช้า ๆ อีกรอบ แล้วกลับมาลุยใหม่อีกรอบนะ
+      </div>
+      <button class="btn btn-primary" id="playAgainBtn">Play again</button>
+    </div>
+  </div>
+
+  <!-- ZOOM OVERLAY -->
+  <div class="zoom-overlay" id="zoomOverlay">
+    <div class="zoom-box">
+      <div class="zoom-toolbar">
+        <span>Poster Zoom</span>
+        <div class="zoom-range-wrap">
+          <span id="zoomValue">140%</span>
+          <input
+            type="range"
+            id="zoomRange"
+            min="80"
+            max="260"
+            value="140"
+          />
+          <button class="zoom-close" id="zoomCloseBtn">&times;</button>
+        </div>
+      </div>
+      <div class="zoom-body">
+        <!-- ใช้รูปเดียวกัน -->
+        <img
+          src="/poster.png"
+          alt="Zoomed Poster"
+          class="zoom-img"
+          id="zoomImage"
+        />
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ================= QUIZ DATA =================
+    const quiz = [
+      {
+        question: "What is the main purpose of this poster?",
+        choices: [
+          "To explain how herbal ingredients are harvested and processed.",
+          "To advertise a herbal inhaler that helps improve breathing and relieve discomfort.",
+          "To compare different brands of inhalers and their prices.",
+          "To warn people about the side effects of using inhalers every day."
+        ],
+        correct: 1,
+        explanation:
+          "โปสเตอร์เน้นว่า “POISE XIAN HERBAL INHALER – Revitalize Your Senses Instantly” พร้อมสรรพคุณต่าง ๆ จึงชัดว่าต้องการโฆษณายาดมสมุนไพร ไม่ได้เทียบราคา ไม่ได้เตือนอันตราย และไม่ได้อธิบายกระบวนการผลิต."
+      },
+      {
+        question:
+          "Which of the following benefits is NOT mentioned in the bullet list on the poster?",
+        choices: [
+          "Fast relief from nasal congestion",
+          "Helps reduce dizziness and motion sickness",
+          "Helps you fall asleep deeply at night",
+          "Eases sinus discomfort and headaches"
+        ],
+        correct: 2,
+        explanation:
+          "ใน bullet list มี fast relief จาก nasal congestion, ลด dizziness / motion sickness และ eases sinus discomfort and headaches แต่ไม่มีการพูดถึงการช่วยให้หลับลึกตอนกลางคืนเลย."
+      },
+      {
+        question:
+          "In the phrase “Pocket-sized and convenient to carry,” what does “pocket-sized” most nearly mean?",
+        choices: [
+          "Very heavy and expensive",
+          "Small enough to fit in your pocket",
+          "Large and powerful",
+          "Used only at home"
+        ],
+        correct: 1,
+        explanation:
+          "pocket-sized = ขนาดเล็กพอใส่ในกระเป๋าได้ และในโปสเตอร์ตามด้วยคำว่า convenient to carry ยิ่งตอกย้ำว่าหมายถึงพกง่าย ไม่ได้เกี่ยวกับราคา หรือใช้เฉพาะในบ้าน."
+      },
+      {
+        question:
+          "Based on the poster, in which situation would this product be most useful?",
+        choices: [
+          "A person who wants a drink for increasing energy after exercise.",
+          "A person who has nasal congestion and feels dizzy while traveling on a bus.",
+          "A person who needs a cream for dry skin on their hands.",
+          "A person who wants a vitamin supplement for stronger bones."
+        ],
+        correct: 1,
+        explanation:
+          "โปสเตอร์เขียนว่า fast relief from nasal congestion และ helps reduce dizziness and motion sickness ซึ่งตรงกับคนที่คัดจมูกและเวียนหัวเวลาเดินทางบนรถบัส ตัวเลือกอื่นเป็นคนละประเภทสินค้า."
+      },
+      {
+        question:
+          "Which sentence BEST summarizes the overall message of “Breathe Better. Feel Recharged. Pure Herbal Power in Every Inhale.”?",
+        choices: [
+          "Using this inhaler will make your breathing clearer and refresh your body and mind with natural herbal ingredients.",
+          "This inhaler is dangerous and should be used only when you are extremely sick.",
+          "You should stop using any other medicine and only rely on this inhaler.",
+          "The inhaler is mainly for decoration and has no real effect."
+        ],
+        correct: 0,
+        explanation:
+          "สโลแกนพูดถึงการหายใจดีขึ้น (Breathe Better) รู้สึกชาร์จพลัง (Feel Recharged) และพลังสมุนไพรบริสุทธิ์ (Pure Herbal Power) ซึ่งสรุปได้ว่าช่วยให้หายใจโล่งและสดชื่นด้วยสมุนไพรธรรมชาติ ตรงกับตัวเลือก A ที่สุด."
+      }
+    ];
+
+    const LETTERS = ["A", "B", "C", "D"];
+
+    // ================= DOM =================
+    const qNumberEl = document.getElementById("qNumber");
+    const scoreLabel = document.getElementById("scoreLabel");
+    const progressFill = document.getElementById("progressFill");
+    const questionTextEl = document.getElementById("questionText");
+    const choicesContainer = document.getElementById("choicesContainer");
+    const explainBox = document.getElementById("explainBox");
+    const nextBtn = document.getElementById("nextBtn");
+    const resetBtn = document.getElementById("resetBtn");
+
+    const resultOverlay = document.getElementById("resultOverlay");
+    const resultTag = document.getElementById("resultTag");
+    const resultTitle = document.getElementById("resultTitle");
+    const resultScore = document.getElementById("resultScore");
+    const resultText = document.getElementById("resultText");
+    const playAgainBtn = document.getElementById("playAgainBtn");
+
+    const posterThumb = document.getElementById("posterThumb");
+    const zoomOverlay = document.getElementById("zoomOverlay");
+    const zoomImage = document.getElementById("zoomImage");
+    const zoomRange = document.getElementById("zoomRange");
+    const zoomValue = document.getElementById("zoomValue");
+    const zoomCloseBtn = document.getElementById("zoomCloseBtn");
+
+    // ================= STATE =================
+    let currentIndex = 0;
+    let score = 0;
+    let answered = false;
+    // ====== Zoom interaction state (pinch / pan support) ======
+    let imgX = 0, imgY = 0; // translation in px
+    let currentScale = parseInt(zoomRange.value, 10) / 100;
+    let lastScale = currentScale;
+    const pointers = new Map();
+    let startDist = 0;
+    let startMid = null;
+
+    // ================= FUNCTIONS =================
+    function renderQuestion() {
+      const q = quiz[currentIndex];
+      answered = false;
+      nextBtn.disabled = true;
+      explainBox.classList.remove("visible");
+      explainBox.textContent = "";
+
+      qNumberEl.textContent = currentIndex + 1;
+      questionTextEl.textContent = q.question;
+
+      const percent = (currentIndex / quiz.length) * 100;
+      progressFill.style.width = percent + "%";
+
+      choicesContainer.innerHTML = "";
+      q.choices.forEach((text, idx) => {
+        const btn = document.createElement("button");
+        btn.className = "choice";
+        btn.dataset.index = idx;
+
+        const label = document.createElement("span");
+        label.className = "choice-label";
+        label.textContent = LETTERS[idx];
+
+        btn.appendChild(label);
+        btn.appendChild(document.createTextNode(text));
+        btn.addEventListener("click", () => handleChoice(btn, idx));
+        choicesContainer.appendChild(btn);
+      });
+
+      // reset animation
+      questionTextEl.style.animation = "none";
+      void questionTextEl.offsetWidth;
+      questionTextEl.style.animation = "fadeInUp 0.25s ease";
+    }
+
+    function handleChoice(btn, idx) {
+      if (answered) return;
+      answered = true;
+
+      const q = quiz[currentIndex];
+      const buttons = choicesContainer.querySelectorAll(".choice");
+      buttons.forEach(b => b.classList.add("disabled"));
+
+      if (idx === q.correct) {
+        btn.classList.add("correct");
+        score++;
+        scoreLabel.textContent = score;
+      } else {
+        btn.classList.add("wrong");
+        // ทำให้คำตอบที่ถูกเป็นสีเขียว
+        buttons[q.correct].classList.add("correct");
+      }
+
+      explainBox.textContent = q.explanation;
+      explainBox.classList.add("visible");
+
+      if (currentIndex === quiz.length - 1) {
+        nextBtn.textContent = "Result";
+      }
+      nextBtn.disabled = false;
+    }
+
+    function nextQuestion() {
+      if (!answered) return;
+      if (currentIndex < quiz.length - 1) {
+        currentIndex++;
+        renderQuestion();
+      } else {
+        showResult();
+      }
+    }
+
+    function showResult() {
+      const total = quiz.length;
+      const pct = (score / total) * 100;
+
+      let tag = "";
+      let title = "";
+      let text = "";
+
+      if (pct === 100) {
+        tag = "Herbal Grandmaster 🌿";
+        title = "Perfect score!";
+        text =
+          "อ่านโปสเตอร์ได้ครบทุกมุมมอง ทั้ง main idea, detail, vocab, inference ถ้าเป็นข้อสอบจริงคือโกยคะแนนเนียน ๆ.";
+      } else if (pct >= 60) {
+        tag = "Clear Breathing Pro 😎";
+        title = "Nice work!";
+        text =
+          "เข้าใจเนื้อหาโดยรวมได้ดี เหลือเก็บรายละเอียดเล็ก ๆ น้อย ๆ อีกนิดเดียว TGAT 1 part นี้จะกลายเป็นของง่าย.";
+      } else {
+        tag = "Herbal Rookie 🌱";
+        title = "Keep going!";
+        text =
+          "ลองกลับไปมองแต่ละคำในโปสเตอร์ช้า ๆ โฟกัส keyword ให้มากขึ้น แล้วลองกดเล่นอีกรอบเพื่อจับ pattern คำถาม.";
+      }
+
+      resultTag.textContent = tag;
+      resultTitle.textContent = title;
+      resultScore.textContent = `You scored ${score} / ${total}`;
+      resultText.textContent = text;
+
+      resultOverlay.classList.add("active");
+    }
+
+    function resetQuiz() {
+      currentIndex = 0;
+      score = 0;
+      scoreLabel.textContent = score;
+      nextBtn.textContent = "Next";
+      resultOverlay.classList.remove("active");
+      renderQuestion();
+    }
+
+    // ========== POSTER ZOOM ==========
+    function openZoom() {
+      zoomOverlay.classList.add("active");
+      document.body.style.overflow = "hidden";
+      // reset pan/zoom state when opening
+      imgX = 0;
+      imgY = 0;
+      currentScale = parseInt(zoomRange.value, 10) / 100;
+      lastScale = currentScale;
+      updateTransform();
+    }
+
+    function closeZoom() {
+      zoomOverlay.classList.remove("active");
+      document.body.style.overflow = "";
+      // clear any active pointers
+      pointers.clear();
+      startDist = 0;
+      startMid = null;
+    }
+
+    function updateTransform() {
+      zoomImage.style.transform = `translate(${imgX}px, ${imgY}px) scale(${currentScale})`;
+      zoomValue.textContent = `${Math.round(currentScale * 100)}%`;
+    }
+
+    function applyZoom() {
+      // user moved the range input — update scale but preserve translations
+      currentScale = parseInt(zoomRange.value, 10) / 100;
+      lastScale = currentScale;
+      updateTransform();
+    }
+
+    // ================= EVENTS =================
+    nextBtn.addEventListener("click", nextQuestion);
+    resetBtn.addEventListener("click", resetQuiz);
+    playAgainBtn.addEventListener("click", resetQuiz);
+
+    posterThumb.addEventListener("click", openZoom);
+    zoomCloseBtn.addEventListener("click", closeZoom);
+    zoomRange.addEventListener("input", applyZoom);
+
+    // ====== Pointer-based pinch & pan for mobile/desktop ======
+    function getDistance(a, b) {
+      const dx = a.clientX - b.clientX;
+      const dy = a.clientY - b.clientY;
+      return Math.hypot(dx, dy);
+    }
+
+    function getMidpoint(a, b) {
+      return { x: (a.clientX + b.clientX) / 2, y: (a.clientY + b.clientY) / 2 };
+    }
+
+    zoomImage.addEventListener('pointerdown', (e) => {
+      zoomImage.setPointerCapture(e.pointerId);
+      pointers.set(e.pointerId, e);
+      if (pointers.size === 2) {
+        const pts = Array.from(pointers.values());
+        startDist = getDistance(pts[0], pts[1]);
+        startMid = getMidpoint(pts[0], pts[1]);
+      }
+    });
+
+    zoomImage.addEventListener('pointermove', (e) => {
+      if (!pointers.has(e.pointerId)) return;
+      pointers.set(e.pointerId, e);
+
+      if (pointers.size === 1) {
+        // pan with single pointer
+        const p = pointers.get(e.pointerId);
+        if (!p) return;
+        // use movementX/Y when available, fallback to manual delta
+        let dx = e.movementX || 0;
+        let dy = e.movementY || 0;
+        imgX += dx;
+        imgY += dy;
+        updateTransform();
+      } else if (pointers.size === 2) {
+        const pts = Array.from(pointers.values());
+        const dist = getDistance(pts[0], pts[1]);
+        if (startDist > 0) {
+          const scaleDelta = dist / startDist;
+          currentScale = Math.max(0.2, Math.min(6, lastScale * scaleDelta));
+
+          // adjust translation so midpoint stays roughly under fingers
+          const mid = getMidpoint(pts[0], pts[1]);
+          const dx = mid.x - (startMid ? startMid.x : mid.x);
+          const dy = mid.y - (startMid ? startMid.y : mid.y);
+          imgX += dx;
+          imgY += dy;
+          startMid = mid;
+
+          // sync range control (rounded)
+          zoomRange.value = Math.round(currentScale * 100);
+          updateTransform();
+        }
+      }
+    });
+
+    function endPointer(e) {
+      if (pointers.has(e.pointerId)) pointers.delete(e.pointerId);
+      if (pointers.size < 2) {
+        // store current scale as baseline for next pinch
+        lastScale = currentScale;
+        startDist = 0;
+        startMid = null;
+      }
+    }
+
+    zoomImage.addEventListener('pointerup', endPointer);
+    zoomImage.addEventListener('pointercancel', endPointer);
+    zoomImage.addEventListener('pointerout', endPointer);
+    zoomImage.addEventListener('pointerleave', endPointer);
+
+    // support mouse wheel zoom on desktop
+    zoomImage.addEventListener('wheel', (e) => {
+      if (!zoomOverlay.classList.contains('active')) return;
+      e.preventDefault();
+      const delta = -e.deltaY;
+      const step = delta > 0 ? 0.05 : -0.05;
+      currentScale = Math.max(0.2, Math.min(6, currentScale + step));
+      lastScale = currentScale;
+      zoomRange.value = Math.round(currentScale * 100);
+      updateTransform();
+    }, { passive: false });
+
+    zoomOverlay.addEventListener("click", e => {
+      if (e.target === zoomOverlay) {
+        closeZoom();
+      }
+    });
+
+    window.addEventListener("keydown", e => {
+      if (e.key === "Escape" && zoomOverlay.classList.contains("active")) {
+        closeZoom();
+      }
+    });
+
+    // ================= START =================
+    renderQuestion();
+  </script>
+</body>
+</html>
