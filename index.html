@@ -554,6 +554,9 @@
 
       <div class="bottom-bar">
         <button class="btn btn-ghost" id="resetBtn">Reset</button>
+        <button class="btn btn-ghost" id="backBtn" disabled>
+          Back
+        </button>
         <button class="btn btn-primary" id="nextBtn" disabled>
           Next
         </button>
@@ -697,11 +700,16 @@
     const zoomRange = document.getElementById("zoomRange");
     const zoomValue = document.getElementById("zoomValue");
     const zoomCloseBtn = document.getElementById("zoomCloseBtn");
+    const backBtn = document.getElementById("backBtn");
 
     // ================= STATE =================
     let currentIndex = 0;
     let score = 0;
     let answered = false;
+    // userAnswers: stores selected index for each question or null
+    const userAnswers = Array(quiz.length).fill(null);
+    // auto-advance timer when user answers a question
+    let autoAdvanceTimer = null;
     // ====== Zoom interaction state (pinch / pan support) ======
     let imgX = 0, imgY = 0; // translation in px
     let currentScale = parseInt(zoomRange.value, 10) / 100;
@@ -713,8 +721,7 @@
     // ================= FUNCTIONS =================
     function renderQuestion() {
       const q = quiz[currentIndex];
-      answered = false;
-      nextBtn.disabled = true;
+      // prepare UI
       explainBox.classList.remove("visible");
       explainBox.textContent = "";
 
@@ -744,37 +751,91 @@
       questionTextEl.style.animation = "none";
       void questionTextEl.offsetWidth;
       questionTextEl.style.animation = "fadeInUp 0.25s ease";
+
+      // If this question was already answered, reflect that and lock choices
+      const answeredIdx = userAnswers[currentIndex];
+      if (answeredIdx !== null) {
+        const buttons = choicesContainer.querySelectorAll('.choice');
+        buttons.forEach(b => b.classList.add('disabled'));
+        // mark correct/wrong
+        if (answeredIdx === q.correct) {
+          buttons[answeredIdx].classList.add('correct');
+        } else {
+          buttons[answeredIdx].classList.add('wrong');
+          buttons[q.correct].classList.add('correct');
+        }
+        explainBox.textContent = q.explanation;
+        explainBox.classList.add('visible');
+        answered = true;
+        nextBtn.disabled = false;
+      } else {
+        answered = false;
+        nextBtn.disabled = true;
+      }
+
+      // clear any pending auto-advance from previous question
+      clearAutoAdvance();
+
+      // back button enabled when not on first question
+      backBtn.disabled = currentIndex === 0;
+
+      // Next acts as Skip now — always enabled
+      nextBtn.disabled = false;
+      nextBtn.textContent = currentIndex === quiz.length - 1 ? 'Result' : 'Skip';
+
+      // ensure score label reflects stored answers
+      recomputeScore();
     }
 
     function handleChoice(btn, idx) {
       if (answered) return;
-      answered = true;
 
       const q = quiz[currentIndex];
-      const buttons = choicesContainer.querySelectorAll(".choice");
-      buttons.forEach(b => b.classList.add("disabled"));
+      // store answer and lock
+      userAnswers[currentIndex] = idx;
+
+      const buttons = choicesContainer.querySelectorAll('.choice');
+      buttons.forEach(b => b.classList.add('disabled'));
 
       if (idx === q.correct) {
-        btn.classList.add("correct");
-        score++;
-        scoreLabel.textContent = score;
+        btn.classList.add('correct');
       } else {
-        btn.classList.add("wrong");
-        // ทำให้คำตอบที่ถูกเป็นสีเขียว
-        buttons[q.correct].classList.add("correct");
+        btn.classList.add('wrong');
+        buttons[q.correct].classList.add('correct');
       }
 
       explainBox.textContent = q.explanation;
-      explainBox.classList.add("visible");
+      explainBox.classList.add('visible');
 
-      if (currentIndex === quiz.length - 1) {
-        nextBtn.textContent = "Result";
+      // mark answered and update score
+      answered = true;
+      recomputeScore();
+
+      // ensure Next shows correct label
+      nextBtn.textContent = currentIndex === quiz.length - 1 ? 'Result' : 'Skip';
+
+      // schedule auto-advance after short delay
+      clearAutoAdvance();
+      autoAdvanceTimer = setTimeout(() => {
+        if (currentIndex < quiz.length - 1) {
+          currentIndex++;
+          renderQuestion();
+        } else {
+          showResult();
+        }
+      }, 900);
+    }
+
+    function clearAutoAdvance() {
+      if (autoAdvanceTimer) {
+        clearTimeout(autoAdvanceTimer);
+        autoAdvanceTimer = null;
       }
-      nextBtn.disabled = false;
     }
 
     function nextQuestion() {
-      if (!answered) return;
+      // allow skipping unanswered questions — act like Skip
+      clearAutoAdvance();
       if (currentIndex < quiz.length - 1) {
         currentIndex++;
         renderQuestion();
@@ -783,7 +844,35 @@
       }
     }
 
+    // go to previous question (answers are locked once set)
+    function prevQuestion() {
+      clearAutoAdvance();
+      if (currentIndex > 0) {
+        currentIndex--;
+        renderQuestion();
+      }
+    }
+
     function showResult() {
+      // ensure score is up-to-date
+      recomputeScore();
+
+      // If there are unanswered questions, jump to the first one instead
+      const firstUnanswered = userAnswers.indexOf(null);
+      if (firstUnanswered !== -1) {
+        // navigate back to the first unanswered question so user can complete the quiz
+        currentIndex = firstUnanswered;
+        renderQuestion();
+        // small notice — keep it simple and local
+        try {
+          // friendly Thai message
+          alert('ยังตอบไม่ครบ — กำลังพาไปยังข้อที่ยังไม่ตอบ');
+        } catch (e) {
+          // ignore if alert is not available
+        }
+        return;
+      }
+
       const total = quiz.length;
       const pct = (score / total) * 100;
 
@@ -817,12 +906,23 @@
     }
 
     function resetQuiz() {
+      clearAutoAdvance();
       currentIndex = 0;
       score = 0;
       scoreLabel.textContent = score;
       nextBtn.textContent = "Next";
       resultOverlay.classList.remove("active");
+      // clear stored answers
+      for (let i = 0; i < userAnswers.length; i++) userAnswers[i] = null;
       renderQuestion();
+    }
+
+    function recomputeScore() {
+      score = userAnswers.reduce((acc, val, i) => {
+        if (val === null) return acc;
+        return acc + (val === quiz[i].correct ? 1 : 0);
+      }, 0);
+      scoreLabel.textContent = score;
     }
 
     // ========== POSTER ZOOM ==========
@@ -862,6 +962,7 @@
     nextBtn.addEventListener("click", nextQuestion);
     resetBtn.addEventListener("click", resetQuiz);
     playAgainBtn.addEventListener("click", resetQuiz);
+    backBtn.addEventListener('click', prevQuestion);
 
     posterThumb.addEventListener("click", openZoom);
     zoomCloseBtn.addEventListener("click", closeZoom);
@@ -968,4 +1069,3 @@
   </script>
 </body>
 </html>
-
